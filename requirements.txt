@@ -1,0 +1,33 @@
+# ── 웹 프레임워크 ──────────────────────────
+fastapi>=0.115.0
+uvicorn>=0.30.0
+python-multipart>=0.0.12
+jinja2>=3.1.4
+aiofiles>=24.1.0
+python-dotenv>=1.0.0
+
+# ── DB ────────────────────────────────────
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0
+
+# ── LLM (langchain 기준으로 통일) ─────────
+langchain>=0.3.0
+langchain-google-genai>=2.0.0
+langchain-openai>=0.2.0
+langchain-community>=0.3.0
+langchain-ollama>=0.2.0
+
+# ── Gemini 구 SDK (pdf_to_json.py 호환용) ─
+# TODO: langchain 포팅 완료되면 제거
+google-generativeai>=0.8.0
+google-genai>=1.0.0
+
+# ── 문서 생성 ──────────────────────────────
+python-pptx>=1.0.2
+weasyprint>=60.0
+reportlab>=4.0.0          # eval_engine PDF 리포트 생성
+pdf2image>=1.17.0         # eval_engine 원고지 PDF → 페이지별 이미지
+pillow>=10.0.0
+
+# ── Pydantic ──────────────────────────────
+pydantic>=2.0.0

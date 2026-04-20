@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}kihobot_x · 통합 플랫폼{% endblock %}
+
+{% block header_pill %}박기호논술 통합 플랫폼{% endblock %}
+
+{% block extra_style %}
+.hero{padding:60px 20px 40px;text-align:center}
+.hero h1{font-size:32px;font-weight:700;color:var(--tx);margin-bottom:12px;letter-spacing:-.5px}
+.hero .sub{font-size:15px;color:var(--mt);margin-bottom:8px}
+.hero .flow{margin-top:24px;display:inline-flex;gap:10px;padding:10px 20px;background:var(--s);border:1px solid var(--bd);border-radius:99px;font-size:13px;color:var(--mt);flex-wrap:wrap;justify-content:center}
+.hero .flow .node{font-weight:500;color:var(--tx)}
+.hero .flow .arrow{color:var(--bd)}
+
+.engines{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:920px;margin:0 auto;padding:20px 20px 60px}
+.engine{background:var(--s);border:1px solid var(--bd);border-radius:20px;padding:40px 32px;text-decoration:none;color:var(--tx);transition:all .2s;display:flex;flex-direction:column;min-height:280px}
+.engine:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(83,74,183,.1);border-color:var(--pu)}
+.engine.analy:hover{border-color:var(--te);box-shadow:0 12px 32px rgba(15,110,86,.1)}
+.engine-badge{display:inline-block;font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;background:var(--tl);color:var(--te);margin-bottom:16px;width:fit-content}
+.engine.eval .engine-badge{background:var(--pl);color:var(--pd)}
+.engine h2{font-size:26px;font-weight:700;letter-spacing:-.3px;margin-bottom:12px}
+.engine .desc{font-size:14px;color:var(--mt);line-height:1.65;margin-bottom:20px;flex:1}
+.engine .features{font-size:13px;color:var(--tx);line-height:1.9}
+.engine .features li{list-style:none;padding-left:18px;position:relative}
+.engine .features li::before{content:'→';position:absolute;left:0;color:var(--pu);font-weight:600}
+.engine.analy .features li::before{color:var(--te)}
+.engine .cta{margin-top:20px;font-size:14px;font-weight:600;color:var(--pu)}
+.engine.analy .cta{color:var(--te)}
+
+.workflow{max-width:920px;margin:0 auto;padding:0 20px 60px}
+.workflow h3{font-size:15px;font-weight:600;color:var(--mt);margin-bottom:16px;text-align:center;letter-spacing:1px}
+.workflow-diagram{background:var(--s);border:1px solid var(--bd);border-radius:var(--r);padding:24px 20px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+.wf-step{background:var(--s2);padding:10px 16px;border-radius:8px;font-size:13px;font-weight:500}
+.wf-step.source{background:var(--al);color:var(--am)}
+.wf-step.analy{background:var(--tl);color:var(--te)}
+.wf-step.eval{background:var(--pl);color:var(--pd)}
+.wf-arrow{color:var(--bd);font-size:18px}
+
+.footer-info{text-align:center;color:var(--mt);font-size:12px;padding:30px 0}
+
+@media(max-width:760px){
+  .engines{grid-template-columns:1fr}
+  .hero h1{font-size:24px}
+}
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <h1>논술 교육의 모든 것</h1>
+  <p class="sub">기출문제 하나로 교안 제작부터 평가 첨삭까지</p>
+  <div class="flow">
+    <span>📄 기출</span>
+    <span class="arrow">→</span>
+    <span class="node">🔬 분석엔진</span>
+    <span class="arrow">→</span>
+    <span>📑 교안/PPT</span>
+    <span class="arrow">·</span>
+    <span class="node">📊 평가엔진</span>
+    <span class="arrow">→</span>
+    <span>✍️ 첨삭 리포트</span>
+  </div>
+</div>
+
+<section class="engines">
+  <a href="/analy/" class="engine analy">
+    <span class="engine-badge">analy_engine</span>
+    <h2>분석엔진 🔬</h2>
+    <p class="desc">대학별 기출문제 PDF를 분석해 연구소 교안과 수업용 PPT를 자동 생성합니다. 선생님은 해설만 채워 넣으면 됩니다.</p>
+    <ul class="features">
+      <li>PDF → 구조화 JSON 자동 변환 (Gemini)</li>
+      <li>연구소 포맷 교안 DOCX 자동 생성</li>
+      <li>수업용 PPT 슬라이드 자동 제작</li>
+      <li>문항카드 / 1부2부 분리형 / 단순형 지원</li>
+    </ul>
+    <div class="cta">교안 작업 시작 →</div>
+  </a>
+
+  <a href="/eval/" class="engine eval">
+    <span class="engine-badge">eval_engine</span>
+    <h2>평가엔진 📊</h2>
+    <p class="desc">학생 답안 이미지를 OCR로 추출하고, 멀티에이전트 첨삭으로 장점·단점·보완할 부분·총평을 구성된 리포트로 생성합니다.</p>
+    <ul class="features">
+      <li>손글씨 원고지 OCR (Gemini Vision)</li>
+      <li>장점/단점/보완/총평 구조화 첨삭</li>
+      <li>선생님 검토·수정 UI 제공</li>
+      <li>PDF 리포트 다운로드</li>
+    </ul>
+    <div class="cta">평가 시작 →</div>
+  </a>
+</section>
+
+<section class="workflow">
+  <h3>통합 워크플로우</h3>
+  <div class="workflow-diagram">
+    <div class="wf-step source">기출 PDF</div>
+    <span class="wf-arrow">→</span>
+    <div class="wf-step analy">분석엔진</div>
+    <span class="wf-arrow">→</span>
+    <div class="wf-step">문제은행 · 교안 · PPT</div>
+    <span class="wf-arrow">→</span>
+    <div class="wf-step eval">평가엔진</div>
+    <span class="wf-arrow">→</span>
+    <div class="wf-step">학생 첨삭 리포트</div>
+  </div>
+</section>
+
+<div class="footer-info">
+  kihobot_x · 박기호논술 자체 플랫폼 (내부용)
+</div>
+{% endblock %}

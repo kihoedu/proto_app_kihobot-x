@@ -1,0 +1,9 @@
+{
+  "name": "kihobot_x",
+  "version": "1.0.0",
+  "description": "박기호논술 통합 플랫폼 - 분석엔진 + 평가엔진",
+  "private": true,
+  "dependencies": {
+    "docx": "^9.0.0"
+  }
+}

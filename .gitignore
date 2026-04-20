@@ -1,0 +1,59 @@
+# 환경변수 (절대 올리면 안 됨)
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Node.js
+node_modules/
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# 데이터 (서버 자원 · gitkeep 만 유지)
+data/uploads/*
+data/outputs/*
+data/lesson_json/*
+data/lesson_md/*
+data/chroma_db/*
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+!data/uploads/.gitkeep
+!data/outputs/.gitkeep
+!data/lesson_json/.gitkeep
+!data/lesson_md/.gitkeep
+!data/chroma_db/.gitkeep
+
+# 로그
+*.log
+server.log
+
+# 백업
+*_backup_*/
+backups/
+_mcp_test.txt
+
+# Docker
+docker-compose.override.yml
+
+# 팀원 공유용 zip (만들어진 배포 파일)
+kihobot_x_share_*.zip
+
+# Railway / Cloudflare 로컬 파일
+cloudflared.exe
+cloudflared
+.railway/

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}kihobot_x{% endblock %}</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f6f3;--s:#fff;--s2:#f1f0ec;--bd:#e2e0d9;
+  --tx:#1a1a18;--mt:#6b6b66;
+  --pu:#534AB7;--pl:#EEEDFE;--pd:#3C3489;
+  --te:#0F6E56;--tl:#E1F5EE;
+  --am:#854F0B;--al:#FAEEDA;
+  --r:10px;
+}
+body{font-family:-apple-system,'Noto Sans KR','맑은 고딕',sans-serif;background:var(--bg);color:var(--tx);font-size:15px;line-height:1.6}
+header.kx-header{background:var(--s);border-bottom:1px solid var(--bd);padding:0 20px;display:flex;align-items:center;height:56px;gap:16px;position:sticky;top:0;z-index:100}
+.kx-brand{font-size:16px;font-weight:700;color:var(--pd);text-decoration:none;display:flex;align-items:center;gap:6px}
+.kx-brand-x{color:var(--te);font-weight:900}
+.kx-pill{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:500;background:var(--pl);color:var(--pd)}
+.kx-nav{display:flex;gap:4px;margin-left:auto}
+.kx-nav a{padding:6px 14px;border-radius:6px;font-size:13px;color:var(--mt);font-weight:500;text-decoration:none;transition:.15s}
+.kx-nav a.active,.kx-nav a:hover{background:var(--pl);color:var(--pd)}
+.kx-nav a.analy.active,.kx-nav a.analy:hover{background:var(--tl);color:var(--te)}
+.kx-breadcrumb{padding:14px 20px;background:var(--s2);border-bottom:1px solid var(--bd);font-size:13px;color:var(--mt)}
+.kx-breadcrumb a{color:var(--mt);text-decoration:none}
+.kx-breadcrumb a:hover{color:var(--pu);text-decoration:underline}
+.kx-breadcrumb .sep{margin:0 8px;color:var(--bd)}
+main.kx-main{max-width:1200px;margin:0 auto;padding:0}
+{% block extra_style %}{% endblock %}
+</style>
+{% block head_extra %}{% endblock %}
+</head>
+<body>
+<header class="kx-header">
+  <a href="/" class="kx-brand">kihobot<span class="kx-brand-x">_x</span></a>
+  <span class="kx-pill">{% block header_pill %}통합 플랫폼{% endblock %}</span>
+  <nav class="kx-nav">
+    <a href="/" class="{% if active_page == 'home' %}active{% endif %}">홈</a>
+    <a href="/eval/" class="{% if active_page == 'eval' %}active{% endif %}">평가엔진</a>
+    <a href="/analy/" class="analy {% if active_page == 'analy' %}active{% endif %}">분석엔진</a>
+  </nav>
+</header>
+
+{% block breadcrumb %}{% endblock %}
+
+<main class="kx-main">
+{% block content %}{% endblock %}
+</main>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

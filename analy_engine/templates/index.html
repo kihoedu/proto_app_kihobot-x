@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EOLE 교안 자동화</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'맑은 고딕',sans-serif;background:#f5f7fa;color:#333}
+.container{max-width:960px;margin:0 auto;padding:20px}
+header{background:linear-gradient(135deg,#1a365d,#2b6cb0);color:#fff;padding:28px 0;text-align:center;margin-bottom:32px;border-radius:0 0 16px 16px}
+header h1{font-size:30px;letter-spacing:3px}
+header p{margin-top:8px;opacity:.8;font-size:14px}
+.card{background:#fff;border-radius:12px;padding:28px;margin-bottom:24px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.card h2{font-size:18px;color:#1a365d;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #e2e8f0}
+.badge{display:inline-block;background:#2b6cb0;color:#fff;width:28px;height:28px;border-radius:50%;text-align:center;line-height:28px;font-size:14px;font-weight:700;margin-right:8px}
+.upload-area{border:2px dashed #cbd5e0;border-radius:12px;padding:48px;text-align:center;cursor:pointer;transition:.2s}
+.upload-area:hover,.upload-area.dragover{border-color:#2b6cb0;background:#ebf4ff}
+.upload-area.has-file{border-color:#48bb78;background:#f0fff4}
+input[type=file]{display:none}
+.btn{display:inline-block;padding:14px 32px;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s}
+.btn-primary{background:#2b6cb0;color:#fff}
+.btn-primary:hover{background:#1a4d8f}
+.btn-primary:disabled{background:#a0aec0;cursor:not-allowed}
+.btn-sm{padding:8px 18px;font-size:13px}
+.btn-green{background:#276749;color:#fff}
+.btn-green:hover{background:#1a4731}
+.btn-outline{background:transparent;border:2px solid #2b6cb0;color:#2b6cb0}
+.status{margin-top:16px;padding:14px 18px;border-radius:8px;font-size:14px;display:none;line-height:1.8}
+.status.show{display:block}
+.status.info{background:#ebf8ff;color:#2a4365;border:1px solid #bee3f8}
+.status.success{background:#f0fff4;color:#22543d;border:1px solid #9ae6b4}
+.status.error{background:#fff5f5;color:#742a2a;border:1px solid #feb2b2}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{background:#edf2f7;padding:10px 12px;text-align:left;font-weight:600}
+td{padding:10px 12px;border-bottom:1px solid #e2e8f0}
+tr:hover td{background:#f7fafc}
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid #e2e8f0;border-top-color:#2b6cb0;border-radius:50%;animation:spin .8s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+a{color:#2b6cb0;text-decoration:none}a:hover{text-decoration:underline}
+.pipeline-flow{display:flex;align-items:center;justify-content:center;gap:8px;margin:20px 0;font-size:13px;color:#718096;flex-wrap:wrap}
+.pipeline-flow .node{background:#edf2f7;padding:8px 14px;border-radius:6px;font-weight:600;color:#2d3748}
+.pipeline-flow .arrow{font-size:18px;color:#a0aec0}
+.dl-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #e2e8f0}
+.dl-item:last-child{border:none}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-right:6px}
+.tag-docx{background:#d6e4f0;color:#1a365d}
+.tag-pptx{background:#fefcbf;color:#744210}
+.tag-json{background:#e9d8fd;color:#553c9a}
+.tag-md{background:#c6f6d5;color:#22543d}
+</style>
+</head>
+<body>
+<header>
+<h1>EOLE 논술 교안 자동화</h1>
+<p>기출 PDF 하나로 교안 + PPT 자동 생성</p>
+</header>
+<div class="container">
+
+<div class="pipeline-flow">
+<span class="node">📄 PDF 업로드</span><span class="arrow">→</span>
+<span class="node">🤖 Gemini 분석</span><span class="arrow">→</span>
+<span class="node">📋 JSON 추출</span><span class="arrow">→</span>
+<span class="node">📑 교안 DOCX</span><span class="arrow">+</span>
+<span class="node">📊 수업 PPT</span>
+</div>
+
+<!-- 원클릭 자동 생성 -->
+<div class="card">
+<h2><span class="badge">1</span> PDF 업로드 → 전체 자동 생성</h2>
+<div class="upload-area" id="dropZone" onclick="document.getElementById('pdfInput').click()">
+<p style="font-size:44px;margin-bottom:12px">📄</p>
+<p><strong>기출 PDF</strong>를 드래그하거나 클릭</p>
+<p style="color:#718096;font-size:13px;margin-top:8px">업로드 즉시 JSON/MD + 교안 DOCX + PPT 자동 생성</p>
+</div>
+<input type="file" id="pdfInput" accept=".pdf">
+
+<!-- 트랙 선택 -->
+<div style="margin-top:16px;padding:14px;background:#f7fafc;border-radius:8px;border:1px solid #e2e8f0">
+<p style="font-size:13px;font-weight:600;margin-bottom:10px;color:#2d3748">변환 방식</p>
+<label style="display:inline-flex;align-items:center;gap:6px;margin-right:18px;cursor:pointer;font-size:13px">
+<input type="radio" name="track" value="json" checked style="margin:0">
+<span><strong>JSON 방식</strong> <span style="color:#718096">(기존 · 빠름)</span></span>
+</label>
+<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px">
+<input type="radio" name="track" value="md" style="margin:0">
+<span><strong>MD 방식</strong> <span style="color:#718096">(MD 원본 DB 저장 · RAG 활용)</span></span>
+</label>
+</div>
+
+<div style="margin-top:16px;text-align:center">
+<button class="btn btn-primary" id="btnAuto" disabled onclick="autoGenerate()">🚀 자동 생성 시작</button>
+</div>
+<div class="status" id="statusAuto"></div>
+</div>
+
+<!-- 기존 JSON 재생성 -->
+<div class="card">
+<h2><span class="badge">2</span> 기존 데이터로 재생성</h2>
+{% if items %}
+<table>
+<thead><tr><th>대학</th><th>연도</th><th>계열</th><th>주제</th><th>문항</th><th></th></tr></thead>
+<tbody>
+{% for item in items %}
+<tr>
+<td>{{item.university}}</td><td>{{item.year}}</td><td>{{item.track}}</td>
+<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{item.subtitle}}</td>
+<td>{{item.questions}}</td>
+<td>
+<button class="btn btn-green btn-sm" onclick="genDocx('{{item.filename}}')">DOCX</button>
+<button class="btn btn-outline btn-sm" onclick="genPptx('{{item.filename}}')">PPT</button>
+<a href="/analy/download/{{item.filename}}" class="btn btn-sm" style="background:#e9d8fd;color:#553c9a">JSON</a>
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p style="color:#a0aec0;text-align:center;padding:20px">data/ 폴더에 JSON 파일이 없습니다.</p>
+{% endif %}
+<div class="status" id="statusRe"></div>
+</div>
+
+<!-- 다운로드 -->
+<div class="card">
+<h2 style="display:flex;justify-content:space-between;align-items:center">
+<span><span class="badge">3</span> 생성된 파일</span>
+<button class="btn btn-sm" style="background:#fed7d7;color:#742a2a" onclick="clearAll()">🗑️ 전체 삭제</button>
+</h2>
+<div id="downloadArea">
+{% if output_files %}
+{% for f in output_files %}
+<div class="dl-item" id="file-{{loop.index}}">
+<span>
+{% if f.ext == '.docx' %}<span class="tag tag-docx">DOCX</span>
+{% elif f.ext == '.pptx' %}<span class="tag tag-pptx">PPTX</span>
+{% elif f.ext == '.json' %}<span class="tag tag-json">JSON</span>
+{% elif f.ext == '.md' %}<span class="tag tag-md">MD</span>
+{% endif %}
+{{f.name}} <small style="color:#a0aec0">({{(f.size/1024)|round(0)|int}} KB)</small>
+</span>
+<span>
+<a href="/analy/download/{{f.name}}" class="btn btn-sm btn-primary">다운로드</a>
+<button class="btn btn-sm" style="background:#fed7d7;color:#742a2a;margin-left:4px" onclick="deleteFile('{{f.name}}','file-{{loop.index}}')">✕</button>
+</span>
+</div>
+{% endfor %}
+{% else %}
+<p style="color:#a0aec0;text-align:center;padding:20px">아직 생성된 파일이 없습니다.</p>
+{% endif %}
+</div>
+</div>
+
+</div>
+
+<script>
+const dz=document.getElementById('dropZone'),fi=document.getElementById('pdfInput'),ba=document.getElementById('btnAuto');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');if(e.dataTransfer.files.length){fi.files=e.dataTransfer.files;onFile()}});
+fi.addEventListener('change',onFile);
+
+function onFile(){
+  if(!fi.files.length)return;
+  const f=fi.files[0];
+  dz.classList.add('has-file');
+  dz.innerHTML=`<p style="font-size:44px;margin-bottom:12px">✅</p><p><strong>${f.name}</strong></p><p style="color:#718096;font-size:13px;margin-top:8px">${(f.size/1024).toFixed(0)} KB</p>`;
+  ba.disabled=false;
+}
+
+async function autoGenerate(){
+  const st=document.getElementById('statusAuto');
+  // 선택된 트랙 확인
+  const track=document.querySelector('input[name="track"]:checked').value;
+  const endpoint=track==='md'?'/analy/api/md-generate':'/analy/api/auto-generate';
+  const trackLabel=track==='md'?'MD 추출 → JSON 변환 → DOCX/PPT':'JSON 추출 → DOCX/PPT';
+
+  st.className='status show info';
+  st.innerHTML=`<span class="spinner"></span> Gemini API로 분석 중... ${trackLabel} (1~3분)`;
+  ba.disabled=true;
+
+  const fd=new FormData();
+  fd.append('file',fi.files[0]);
+
+  try{
+    const r=await fetch(endpoint,{method:'POST',body:fd});
+    const d=await r.json();
+    if(r.ok&&d.status==='ok'){
+      st.className='status show success';
+      const trackBadge=track==='md'?'<span style="background:#c6f6d5;color:#22543d;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-left:6px">MD 트랙</span>':'<span style="background:#e9d8fd;color:#553c9a;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-left:6px">JSON 트랙</span>';
+      let html=`<strong>✅ 전체 생성 완료!</strong>${trackBadge}<br>`;
+      d.steps.forEach(s=>html+=s+'<br>');
+      html+='<div style="margin-top:12px">';
+      if(d.md_file) html+=`<a href="/analy/download/${d.md_file}" class="btn btn-sm" style="background:#c6f6d5;color:#22543d;margin:4px">MD 원본</a>`;
+      if(d.json_file) html+=`<a href="/analy/download/${d.json_file}" class="btn btn-sm" style="background:#e9d8fd;color:#553c9a;margin:4px">JSON</a>`;
+      if(d.docx_file) html+=`<a href="/analy/download/${d.docx_file}" class="btn btn-sm btn-green" style="margin:4px">교안 DOCX</a>`;
+      if(d.pptx_file) html+=`<a href="/analy/download/${d.pptx_file}" class="btn btn-sm" style="background:#fefcbf;color:#744210;margin:4px">PPT</a>`;
+      html+='</div>';
+      st.innerHTML=html;
+    }else{
+      st.className='status show error';
+      st.innerHTML='❌ '+(d.steps||[]).join('<br>');
+    }
+  }catch(e){
+    st.className='status show error';
+    st.innerHTML='❌ '+e.message;
+  }
+  ba.disabled=false;
+}
+
+async function genDocx(f){
+  const st=document.getElementById('statusRe');
+  st.className='status show info';st.innerHTML='<span class="spinner"></span> DOCX 생성 중...';
+  const fd=new FormData();fd.append('json_file',f);
+  const r=await fetch('/analy/api/generate-docx',{method:'POST',body:fd});
+  const d=await r.json();
+  if(r.ok){st.className='status show success';st.innerHTML=`✅ <a href="/analy/download/${d.docx_file}">${d.docx_file}</a> (${(d.size/1024).toFixed(0)} KB)`}
+  else{st.className='status show error';st.innerHTML='❌ '+d.detail}
+}
+
+async function genPptx(f){
+  const st=document.getElementById('statusRe');
+  st.className='status show info';st.innerHTML='<span class="spinner"></span> PPT 생성 중...';
+  const fd=new FormData();fd.append('json_file',f);
+  const r=await fetch('/analy/api/generate-pptx',{method:'POST',body:fd});
+  const d=await r.json();
+  if(r.ok){st.className='status show success';st.innerHTML=`✅ <a href="/analy/download/${d.pptx_file}">${d.pptx_file}</a> (${(d.size/1024).toFixed(0)} KB)`}
+  else{st.className='status show error';st.innerHTML='❌ '+d.detail}
+}
+
+async function deleteFile(name, elemId){
+  if(!confirm(`"${name}" 삭제할까요?`)) return;
+  const r=await fetch(`/analy/api/delete/${encodeURIComponent(name)}`,{method:'DELETE'});
+  if(r.ok){
+    const el=document.getElementById(elemId);
+    if(el) el.remove();
+  }else{
+    alert('삭제 실패');
+  }
+}
+
+async function clearAll(){
+  if(!confirm('outputs, data, uploads 폴더의 모든 파일을 삭제합니다.\n계속할까요?')) return;
+  const r=await fetch('/analy/api/clear-all',{method:'POST'});
+  const d=await r.json();
+  if(r.ok){
+    alert(`${d.deleted_count}개 파일 삭제 완료`);
+    location.reload();
+  }else{
+    alert('삭제 실패');
+  }
+}
+</script>
+</body>
+</html>

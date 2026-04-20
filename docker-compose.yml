@@ -1,0 +1,75 @@
+services:
+  # ─────────────────────────────────────────
+  # kihobot_x: 통합 플랫폼 (portal + eval + analy)
+  # ─────────────────────────────────────────
+  kihobot:
+    build: .
+    container_name: kihobot_x
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma3:12b}
+      - DATABASE_URL=sqlite:///./data/kihobot.db
+      - KIHOBOT_ENV=production
+    volumes:
+      - ./data:/app/data
+      - ./common:/app/common
+      - ./portal:/app/portal
+      - ./eval_engine:/app/eval_engine
+      - ./analy_engine:/app/analy_engine
+      - ./main.py:/app/main.py
+    depends_on:
+      - ollama
+    networks:
+      - kihobot-net
+
+  # ─────────────────────────────────────────
+  # ollama: Gemma 3 로컬 LLM (GPU 가속)
+  # RTX 4090 에서 Gemma 3 12B 실행
+  # ─────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: kihobot_ollama
+    restart: always
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - kihobot-net
+
+  # ─────────────────────────────────────────
+  # cloudflared: 외부 접속 터널 (선택)
+  # 토큰 발급 후 .env 에 CLOUDFLARE_TUNNEL_TOKEN 설정
+  # ─────────────────────────────────────────
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: kihobot_tunnel
+    restart: always
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - kihobot
+    networks:
+      - kihobot-net
+    profiles:
+      - tunnel
+
+volumes:
+  ollama-data:
+
+networks:
+  kihobot-net:
+    driver: bridge
