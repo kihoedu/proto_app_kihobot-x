@@ -38,3 +38,4 @@ docker-compose.yml
 
 # 백업
 *_backup_*/
+*.bak

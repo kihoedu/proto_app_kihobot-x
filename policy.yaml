@@ -1,0 +1,4 @@
+name: projects/kihobot-x-project/policies/iam.allowedPolicyMemberDomains
+spec:
+  rules:
+  - allowAll: true

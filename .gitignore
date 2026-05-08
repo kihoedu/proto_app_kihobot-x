@@ -29,6 +29,8 @@ data/outputs/*
 data/lesson_json/*
 data/lesson_md/*
 data/chroma_db/*
+data/reports/*
+data/model_comparison/*
 data/*.db
 data/*.sqlite
 data/*.sqlite3
@@ -37,6 +39,11 @@ data/*.sqlite3
 !data/lesson_json/.gitkeep
 !data/lesson_md/.gitkeep
 !data/chroma_db/.gitkeep
+!data/reports/.gitkeep
+!data/model_comparison/.gitkeep
+
+# 📦 시드 데이터는 git 추적 (박기호논술 → 학원 일방향 배포)
+# data/seed/ 폴더는 직접 제외 패턴 없으므로 자동으로 git 추적됨
 
 # 로그
 *.log

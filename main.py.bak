@@ -36,34 +36,14 @@ app = FastAPI(
     description="박기호논술 통합 플랫폼 - 분석엔진(교안) + 평가엔진(첨삭)",
 )
 
-# ── 1. 인증 미들웨어 (가장 안쪽에서 실행됨) ──────────────────
-@app.middleware("http")
-async def enforce_auth(request: Request, call_next):
-    # 로그인을 검사하지 않고 통과시켜줄 경로들 (무한 루프 방지)
-    public_paths = ["/login", "/auth", "/docs", "/openapi.json"]
-    
-    # 예외 경로이거나 정적 파일(css, js 등) 요청이면 그냥 통과
-    if request.url.path in public_paths or request.url.path.startswith("/static"):
-        return await call_next(request)
-        
-    # 세션에 'user' 정보가 있는지 확인
-    user = request.session.get('user')
-    
-    # 로그인 정보가 없다면 강제로 /login 페이지로 쫓아냄
-    if not user:
-        return RedirectResponse(url='/login')
-        
-    # 로그인 정보가 있다면 원래 가려던 페이지로 안내
-    response = await call_next(request)
-    return response
-
-# ── 2. 세션 및 CORS 미들웨어 (바깥쪽에서 먼저 실행됨) ──────────
-# 주의: SessionMiddleware가 enforce_auth 보다 나중에 등록되어야 먼저(바깥에서) 실행됩니다.
+# ── 미들웨어 세팅 ─────────────────────────────────────────
+# 1. 세션 미들웨어 (Secret Manager에서 값 가져오기)
 app.add_middleware(
     SessionMiddleware, 
     secret_key=os.getenv("SESSION_SECRET_KEY", "default_secret_key")
 )
 
+# 2. CORS 미들웨어
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -75,18 +55,39 @@ app.add_middleware(
 oauth = OAuth()
 oauth.register(
     name='google',
-    client_id=os.getenv('GOOGLE_CLIENT_ID'),
-    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'),
+    client_id=os.getenv('GOOGLE_CLIENT_ID'),         # 수정: 환경변수에서 로드
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET'), # 수정: 환경변수에서 로드
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
     client_kwargs={'scope': 'openid email profile'}
 )
+
+# ── 인증 미들웨어 (전역 문지기) ───────────────────────────
+@app.middleware("http")
+async def enforce_auth(request: Request, call_next):
+    # 로그인을 검사하지 않고 통과시켜줄 경로들 (무한 루프 방지)
+    public_paths = ["/login", "/auth", "/docs", "/openapi.json"]
+    
+    # 1. 예외 경로이거나 정적 파일(css, js 등) 요청이면 그냥 통과
+    if request.url.path in public_paths or request.url.path.startswith("/static"):
+        return await call_next(request)
+        
+    # 2. 세션에 'user' 정보가 있는지 확인
+    user = request.session.get('user')
+    
+    # 3. 로그인 정보가 없다면 강제로 /login 페이지로 쫓아냄
+    if not user:
+        return RedirectResponse(url='/login')
+        
+    # 4. 로그인 정보가 있다면 원래 가려던 페이지로 안내
+    response = await call_next(request)
+    return response
 
 # ── 인증용 라우터 ─────────────────────────────────────────
 @app.get('/login')
 async def login(request: Request):
     # 로그인 시도 시 구글 서버로 리디렉션
     redirect_uri = request.url_for('auth')
-    # 클라우드 배포 시 https가 http로 강제 변환되는 것을 막기 위한 팁
+    # 클라우드 배포 시 https가 http로 강제 변환되는 것을 막기 위한 팁 (선택 사항)
     redirect_uri = str(redirect_uri).replace("http://", "https://") 
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
@@ -103,6 +104,8 @@ async def auth(request: Request):
     # 세션에 유저 정보 저장 후 메인 페이지로 이동
     request.session['user'] = user
     return RedirectResponse(url='/')
+
+# (참고: 기존 '/' 경로는 portal_router가 처리하므로 삭제했습니다.)
 
 # ── 각 엔진 라우터 등록 ─────────────────────────────────
 from portal.routes import router as portal_router
